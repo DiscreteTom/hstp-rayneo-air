@@ -38,7 +38,7 @@ pub unsafe fn get_position() -> *mut PositionData {
 }
 
 pub unsafe fn get_rotation() -> *mut RotationData {
-  ROT_DATA.enabled = false;
+  ROT_DATA.enabled = true;
   unsafe {
     let p = GetArSensor();
     // read float from p+44
