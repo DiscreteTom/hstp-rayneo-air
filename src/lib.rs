@@ -1,7 +1,3 @@
-mod model;
-
-use model::{PositionData, RotationData};
-
 #[link(name = "XRSDK", kind = "dylib")]
 extern "C" {
   fn XRSDK_Init();
@@ -9,43 +5,37 @@ extern "C" {
   fn GetArSensor() -> *mut u8;
 }
 
-static mut POS_DATA: PositionData = PositionData {
-  enabled: false,
-  x: 0.0,
-  y: 0.0,
-  z: 0.0,
-};
-
-static mut ROT_DATA: RotationData = RotationData {
-  enabled: false,
-  x: 0.0,
-  y: 0.0,
-  z: 0.0,
-  w: 0.0,
-};
+/// enabled: bool, x: f32, y: f32, z: f32
+static mut POS_DATA: [u8; 13] = [0; 13];
+/// enabled: bool, x: f32, y: f32, z: f32, w: f32
+static mut ROT_DATA: [u8; 17] = [0; 17];
 
 pub fn init() {
-  unsafe { XRSDK_Init() }
+  unsafe {
+    ROT_DATA[0] = 1; // enable rotation
+    XRSDK_Init()
+  }
 }
 
 pub fn shutdown() {
-  unsafe { XRSDK_Shutdown() }
+  unsafe {
+    ROT_DATA[0] = 0; // disable rotation
+    XRSDK_Shutdown()
+  }
 }
 
-pub unsafe fn get_position() -> *mut PositionData {
-  POS_DATA.enabled = false;
-  &mut POS_DATA
+pub unsafe fn get_position() -> *mut [u8; 13] {
+  &mut POS_DATA // position is disabled
 }
 
-pub unsafe fn get_rotation() -> *mut RotationData {
-  ROT_DATA.enabled = true;
+pub unsafe fn get_rotation() -> *mut [u8; 17] {
   unsafe {
     let p = GetArSensor();
     // read float from p+44
-    ROT_DATA.x = *(p.add(44)) as f32;
-    ROT_DATA.y = *(p.add(48)) as f32;
-    ROT_DATA.z = *(p.add(52)) as f32;
-    ROT_DATA.w = *(p.add(56)) as f32;
+    p.add(44).copy_to(ROT_DATA.as_mut_ptr().add(1), 4);
+    p.add(48).copy_to(ROT_DATA.as_mut_ptr().add(5), 4);
+    p.add(52).copy_to(ROT_DATA.as_mut_ptr().add(9), 4);
+    p.add(56).copy_to(ROT_DATA.as_mut_ptr().add(13), 4);
   }
   &mut ROT_DATA
 }
