@@ -5,6 +5,7 @@ extern "C" {
   fn XRSDK_Init();
   fn XRSDK_Shutdown();
   fn GetArSensor() -> *mut u8;
+  fn SetPanelLuminance(n: i32);
 }
 
 /// enabled: bool, x: f32, y: f32, z: f32
@@ -16,7 +17,8 @@ static mut ROT_DATA: [u8; 17] = [0; 17];
 pub extern "C" fn TP_Init() {
   unsafe {
     ROT_DATA[0] = 1; // enable rotation
-    XRSDK_Init()
+    XRSDK_Init();
+    SetPanelLuminance(0)
   }
 }
 
